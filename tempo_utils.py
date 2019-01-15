@@ -103,8 +103,7 @@ class toa:
             for i in range(0,len(fields),2):
                 self.flags[fields[i].lstrip('-')] = fields[i+1]
         elif self.format=="ITOA":
-            raise RuntimeError, \
-                "TOA format '%s' not implemented yet" % self.format
+            raise RuntimeError("TOA format '%s' not implemented yet" % self.format)
 
     def is_toa(self):
         """Return True if this is a valid TOA (ie not command/comment/etc)"""
@@ -147,9 +146,7 @@ def _unpack_record(raw,fmt=None):
         fmt = 'd' * (dlen/8)
     ss = struct.unpack('=i'+fmt+'i',raw)
     if ss[0]!=dlen or ss[-1]!=dlen:
-        raise RuntimeError,\
-                "Record length does not match (s1=%d s2=%d len=%d)" % (ss[0],
-                        ss[-1], dlen)
+        raise RuntimeError("Record length does not match (s1=%d s2=%d len=%d)" % (ss[0], ss[-1], dlen))
     return ss[1:-1]
 
 class residual:
@@ -175,17 +172,16 @@ class residual:
 
     def parse_raw(self,raw):
         if len(raw) != 80:
-            raise RuntimeError, "Invalid raw residual block (len=%d)" \
-                    % len(raw)
+            raise RuntimeError("Invalid raw residual block (len=%d)"% len(raw))
+
         (s1, self.mjd_bary, self.res_phase, self.res_us, self.ophase,
-                self.rf_bary, self.weight, self.err_us, self.prefit_phase,
-                self.ddm, s2) = struct.unpack("=idddddddddi", raw)
+            self.rf_bary, self.weight, self.err_us, self.prefit_phase,
+            self.ddm, s2) = struct.unpack("=idddddddddi", raw)
         if s1 != 72 or s2 != 72:
-            raise RuntimeError, "Error parsing residual block (s1=%d s2=%d)" \
-                    % (s1, s2)
+            raise RuntimeError("Error parsing residual block (s1=%d s2=%d)" % (s1, s2))
         # Change units:
         self.res_us *= 1e6
-        self.prefit_us = (self.res_us / self.res_phase * self.prefit_phase 
+        self.prefit_us = (self.res_us / self.res_phase * self.prefit_phase
                 if self.res_phase!=0.0 else 0.0)
 
 
@@ -424,8 +420,8 @@ def toa_resid_match(toas, resids, phi=None):
         if toa.is_toa():
             toa_count += 1
     if toa_count != len(resids):
-        raise RuntimeError, "TOA count (%d) != residual count (%d)" \
-                % (toa_count, len(resids))
+        raise RuntimeError("TOA count (%d) != residual count (%d)"
+                % (toa_count, len(resids)))
     for toa in toas:
         if not toa.is_toa():
             continue
@@ -457,13 +453,13 @@ def run_tempo(toas, parfile, show_output=False,
         # Always add mode 1 if it's not there
         if not any([t.command=='MODE' for t in toas]):
             if not quiet:
-                print "tempo_utils.run_tempo: Adding 'MODE 1'"
+                print("tempo_utils.run_tempo: Adding 'MODE 1'")
             extra_cmds.insert(0,toa('MODE 1'))
         # Check if there are tempo2 TOAs but no FORMAT line
         if any([t.format=='Tempo2' for t in toas]) \
                 and not any([t.command=='FORMAT' for t in toas]):
             if not quiet:
-                print "tempo_utils.run_tempo: Adding 'FORMAT 1'"
+                print("tempo_utils.run_tempo: Adding 'FORMAT 1'")
             extra_cmds.insert(0,toa('FORMAT 1'))
         write_toa_file("pulsar.toa", toalist(extra_cmds+toas))
         tempo_args = other_options if other_options else ""
@@ -483,13 +479,13 @@ def run_tempo(toas, parfile, show_output=False,
                 shutil.copy(inabspulsenum,os.path.basename(inabspulsenum))
                 tempo_args += " -ni " + os.path.basename(inabspulsenum)
             else:
-                print inabspulsenum," does not exist"
+                print(inabspulsenum," does not exist")
         cmd = "tempo " + tempo_args + " -f pulsar.par pulsar.toa"
         if show_output==False:
             cmd += " > /dev/null"
         os.system(cmd)
         resids = read_resid2_file()
-        if get_phisun: 
+        if get_phisun:
             phisun = list(numpy.loadtxt('phisun.tmp'))
         else:
             phisun = None
@@ -539,7 +535,7 @@ class polycos(list):
                 more = False
 
     @classmethod
-    def generate(cls, parfile, site, mjd_start, tobs, 
+    def generate(cls, parfile, site, mjd_start, tobs,
             ncoeff=15, freq=1420.0, outfile=None):
         """Generate a polyco set from parfile.  If outfile is not none,
         the polycos will be saved in the given file name, otherwise
@@ -741,7 +737,7 @@ class parfile(object):
         try:
             self.lines = list(fname)
         except:
-            raise TypeError("parfile can't be constructed from type '%s'" % 
+            raise TypeError("parfile can't be constructed from type '%s'" %
                     str(type(fname)))
 
     def write(self, fname):
@@ -791,9 +787,9 @@ class parfile(object):
 
     def val(self, key, dtype=str):
         l = self.line(key,strip=True)
-        if dtype=='float' or dtype==float: 
+        if dtype=='float' or dtype==float:
             dtype_func = self._fortran_float
-        else: 
+        else:
             dtype_func = dtype
         return dtype_func(l.split()[0])
 
@@ -874,6 +870,5 @@ class parfile(object):
     def dmx_indices(self):
         """Return a list of all dmx indices in the file."""
         return sorted([int(k.split('_')[1])
-            for k in self.keys 
+            for k in self.keys
             if k.startswith('DMX_')])
-
